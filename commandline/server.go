@@ -1,5 +1,4 @@
-/* Package httpserver */
-package main
+package poker
 
 import (
 	"encoding/json"

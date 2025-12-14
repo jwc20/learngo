@@ -1,4 +1,4 @@
-package main
+package poker
 
 import (
 	"os"
@@ -21,10 +21,10 @@ func TestFileSystemStore(t *testing.T) {
 			{"Cleo", 10},
 		}
 
-		assertLeague(t, got, want)
+		AssertLeague(t, got, want)
 
 		got = store.GetLeague()
-		assertLeague(t, got, want)
+		AssertLeague(t, got, want)
 	})
 
 	t.Run("works with an empty file", func(t *testing.T) {
@@ -83,10 +83,10 @@ func TestFileSystemStore(t *testing.T) {
 			{"Cleo", 10},
 		}
 
-		assertLeague(t, got, want)
+		AssertLeague(t, got, want)
 
 		got = store.GetLeague()
-		assertLeague(t, got, want)
+		AssertLeague(t, got, want)
 	})
 
 	t.Run("get player score", func(t *testing.T) {
@@ -102,14 +102,6 @@ func TestFileSystemStore(t *testing.T) {
 		want := 33
 		assertScoreEquals(t, got, want)
 	})
-}
-
-func assertScoreEquals(t *testing.T, got, want int) {
-	t.Helper()
-
-	if got != want {
-		t.Errorf("got %d want %d", got, want)
-	}
 }
 
 // -------------------------------------------------------------------
@@ -145,5 +137,13 @@ func assertNoError(t testing.TB, err error) {
 	t.Helper()
 	if err != nil {
 		t.Fatalf("didn't expect an error but got one, %v", err)
+	}
+}
+
+func assertScoreEquals(t *testing.T, got, want int) {
+	t.Helper()
+
+	if got != want {
+		t.Errorf("got %d want %d", got, want)
 	}
 }
