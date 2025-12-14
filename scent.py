@@ -30,6 +30,7 @@ ignore_dirs = [
     "http-server",
     "httpserver",
     "json",
+    "io",
 ]
 
 
