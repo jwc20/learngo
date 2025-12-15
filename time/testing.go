@@ -1,9 +1,11 @@
 package poker
 
 import (
+	"fmt"
 	"net/http/httptest"
 	"reflect"
 	"testing"
+	"time"
 )
 
 type StubPlayerStore struct {
@@ -63,4 +65,23 @@ func AssertContentType(t *testing.T, response *httptest.ResponseRecorder, want s
 	if response.Result().Header.Get("content-type") != "application/json" {
 		t.Errorf("response did not have content-type of %s, got %v", want, response.Result().Header)
 	}
+}
+
+type ScheduledAlert struct {
+	At     time.Duration
+	Amount int
+}
+
+func (s ScheduledAlert) String() string {
+	return fmt.Sprintf("%d chips at %v", s.Amount, s.At)
+}
+
+// SpyBlindAlerter allows you to spy on ScheduleAlertAt calls.
+type SpyBlindAlerter struct {
+	Alerts []ScheduledAlert
+}
+
+// ScheduleAlertAt records alerts that have been scheduled.
+func (s *SpyBlindAlerter) ScheduleAlertAt(at time.Duration, amount int) {
+	s.Alerts = append(s.Alerts, ScheduledAlert{at, amount})
 }
