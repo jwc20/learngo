@@ -18,16 +18,16 @@ func TestGame_Start(t *testing.T) {
 
 		cases := []poker.ScheduledAlert{
 			{At: 0 * time.Second, Amount: 100},
-			{At: 10 * time.Minute, Amount: 200},
-			{At: 20 * time.Minute, Amount: 300},
-			{At: 30 * time.Minute, Amount: 400},
-			{At: 40 * time.Minute, Amount: 500},
-			{At: 50 * time.Minute, Amount: 600},
-			{At: 60 * time.Minute, Amount: 800},
-			{At: 70 * time.Minute, Amount: 1000},
-			{At: 80 * time.Minute, Amount: 2000},
-			{At: 90 * time.Minute, Amount: 4000},
-			{At: 100 * time.Minute, Amount: 8000},
+			{At: 10 * time.Second, Amount: 200},
+			{At: 20 * time.Second, Amount: 300},
+			{At: 30 * time.Second, Amount: 400},
+			{At: 40 * time.Second, Amount: 500},
+			{At: 50 * time.Second, Amount: 600},
+			{At: 60 * time.Second, Amount: 800},
+			{At: 70 * time.Second, Amount: 1000},
+			{At: 80 * time.Second, Amount: 2000},
+			{At: 90 * time.Second, Amount: 4000},
+			{At: 100 * time.Second, Amount: 8000},
 		}
 
 		checkSchedulingCases(cases, t, blindAlerter)
@@ -41,9 +41,9 @@ func TestGame_Start(t *testing.T) {
 
 		cases := []poker.ScheduledAlert{
 			{At: 0 * time.Second, Amount: 100},
-			{At: 12 * time.Minute, Amount: 200},
-			{At: 24 * time.Minute, Amount: 300},
-			{At: 36 * time.Minute, Amount: 400},
+			{At: 12 * time.Second, Amount: 200},
+			{At: 24 * time.Second, Amount: 300},
+			{At: 36 * time.Second, Amount: 400},
 		}
 
 		checkSchedulingCases(cases, t, blindAlerter)
