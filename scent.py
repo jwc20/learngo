@@ -29,9 +29,11 @@ ignore_dirs = [
     "math",
     "http-server",
     "httpserver",
+    "_httpserver",
     "json",
     "io",
     "commandline",
+    "time",
 ]
 
 
