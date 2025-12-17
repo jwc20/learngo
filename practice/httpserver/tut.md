@@ -1,50 +1,75 @@
-## HTTP Server TDD Practice Exercises
+# HTTP Server TDD Practice - Questions & Answers
 
-### Exercise 1: Write the First Test
+------
 
-**Task:** Create `server_test.go` with a test for `PlayerServer` that expects to get Pepper's score as "20".
+## Section 1: Getting Started with a Hard-coded Response
+
+### Exercise 1
+
+**File:** `server_test.go` (create new)
+ **Expected:** Compilation error - `undefined: PlayerServer`
+
+**Question:** Create `server_test.go` with a test for `PlayerServer` that expects to get Pepper's score as "20".
 
 **Answer:**
 
 ```go
+package main
+
+import (
+	"net/http"
+	"net/http/httptest"
+	"testing"
+)
+
 func TestGETPlayers(t *testing.T) {
-t.Run("returns Pepper's score", func(t *testing.T) {
-request, _ := http.NewRequest(http.MethodGet, "/players/Pepper", nil)
-response := httptest.NewRecorder()
+	t.Run("returns Pepper's score", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodGet, "/players/Pepper", nil)
+		response := httptest.NewRecorder()
 
-PlayerServer(response, request)
+		PlayerServer(response, request)
 
-got := response.Body.String()
-want := "20"
+		got := response.Body.String()
+		want := "20"
 
-if got != want {
-t.Errorf("got %q, want %q", got, want)
-}
-})
+		if got != want {
+			t.Errorf("got %q, want %q", got, want)
+		}
+	})
 }
 ```
 
----
+------
 
-### Exercise 2: Create Minimal PlayerServer (Doesn't Compile)
+### Exercise 2
 
-**Task:** Create `server.go` with an empty `PlayerServer` function to satisfy the compiler's "undefined: PlayerServer" error.
+**File:** `server.go` (create new)
+ **Expected:** Compilation error - `too many arguments in call to PlayerServer`
+
+**Question:** Create `server.go` with an empty `PlayerServer` function to satisfy the compiler's "undefined: PlayerServer" error.
 
 **Answer:**
 
 ```go
+package main
+
 func PlayerServer() {}
 ```
 
----
+------
 
-### Exercise 3: Add Arguments to PlayerServer
+### Exercise 3
 
-**Task:** The compiler says "too many arguments". Add the correct parameters to `PlayerServer`.
+**File:** `server.go`
+ **Expected:** Test fails with `got '', want '20'`
+
+**Question:** The compiler says "too many arguments". Add the correct parameters to `PlayerServer`.
 
 **Answer:**
 
 ```go
+package main
+
 import "net/http"
 
 func PlayerServer(w http.ResponseWriter, r *http.Request) {
@@ -52,25 +77,38 @@ func PlayerServer(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
----
+------
 
-### Exercise 4: Make the Test Pass with Hard-coded Value
+### Exercise 4
 
-**Task:** Make `PlayerServer` return "20" to pass the test.
+**File:** `server.go`
+ **Expected:** Tests pass ✓
+
+**Question:** Make `PlayerServer` return "20" to pass the test.
 
 **Answer:**
 
 ```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+)
+
 func PlayerServer(w http.ResponseWriter, r *http.Request) {
-fmt.Fprint(w, "20")
+	fmt.Fprint(w, "20")
 }
 ```
 
----
+------
 
-### Exercise 5: Create main.go Scaffolding
+### Exercise 5
 
-**Task:** Create `main.go` that wires up `PlayerServer` as an HTTP handler on port 5000.
+**File:** `main.go` (create new)
+ **Expected:** Application builds and runs (manual test only)
+
+**Question:** Create `main.go` that wires up `PlayerServer` as an HTTP handler on port 5000.
 
 **Answer:**
 
@@ -88,532 +126,644 @@ func main() {
 }
 ```
 
----
+------
 
-### Exercise 6: Add Second Test Case for Floyd
+## Section 2: Breaking the Hard-coded Value
 
-**Task:** Add a subtest for Floyd's score (expected: "10") to break the hard-coded approach.
+### Exercise 6
+
+**File:** `server_test.go`
+ **Expected:** Test fails with `got '20', want '10'`
+
+**Question:** Add a subtest for Floyd's score (expected: "10") to break the hard-coded approach.
 
 **Answer:**
 
 ```go
 t.Run("returns Floyd's score", func(t *testing.T) {
-request, _ := http.NewRequest(http.MethodGet, "/players/Floyd", nil)
-response := httptest.NewRecorder()
+	request, _ := http.NewRequest(http.MethodGet, "/players/Floyd", nil)
+	response := httptest.NewRecorder()
 
-PlayerServer(response, request)
+	PlayerServer(response, request)
 
-got := response.Body.String()
-want := "10"
+	got := response.Body.String()
+	want := "10"
 
-if got != want {
-t.Errorf("got %q, want %q", got, want)
-}
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
 })
 ```
 
----
+------
 
-### Exercise 7: Extract Player Name from URL
+### Exercise 7
 
-**Task:** Update `PlayerServer` to parse the player name from the URL and return different scores for Pepper and Floyd.
+**File:** `server.go`
+ **Expected:** Tests pass ✓
+
+**Question:** Update `PlayerServer` to parse the player name from the URL and return different scores for Pepper ("20") and Floyd ("10").
 
 **Answer:**
 
 ```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+	"strings"
+)
+
 func PlayerServer(w http.ResponseWriter, r *http.Request) {
-player := strings.TrimPrefix(r.URL.Path, "/players/")
+	player := strings.TrimPrefix(r.URL.Path, "/players/")
 
-if player == "Pepper" {
-fmt.Fprint(w, "20")
-return
-}
+	if player == "Pepper" {
+		fmt.Fprint(w, "20")
+		return
+	}
 
-if player == "Floyd" {
-fmt.Fprint(w, "10")
-return
-}
+	if player == "Floyd" {
+		fmt.Fprint(w, "10")
+		return
+	}
 }
 ```
 
----
+------
 
-### Exercise 8: Refactor - Extract GetPlayerScore Function
+### Exercise 8
 
-**Task:** Refactor by extracting score retrieval into a separate `GetPlayerScore` function.
+**File:** `server.go`
+ **Expected:** Tests pass ✓ (refactor)
+
+**Question:** Refactor by extracting score retrieval into a separate `GetPlayerScore` function.
 
 **Answer:**
 
 ```go
 func PlayerServer(w http.ResponseWriter, r *http.Request) {
-player := strings.TrimPrefix(r.URL.Path, "/players/")
-
-fmt.Fprint(w, GetPlayerScore(player))
+	player := strings.TrimPrefix(r.URL.Path, "/players/")
+	fmt.Fprint(w, GetPlayerScore(player))
 }
 
 func GetPlayerScore(name string) string {
-if name == "Pepper" {
-return "20"
-}
+	if name == "Pepper" {
+		return "20"
+	}
 
-if name == "Floyd" {
-return "10"
-}
+	if name == "Floyd" {
+		return "10"
+	}
 
-return ""
+	return ""
 }
 ```
 
----
+------
 
-### Exercise 9: Refactor Tests - Add Helper Functions
+### Exercise 9
 
-**Task:** DRY up the tests by creating `newGetScoreRequest` and `assertResponseBody` helpers.
+**File:** `server_test.go`
+ **Expected:** Tests pass ✓ (refactor)
+
+**Question:** DRY up the tests by creating `newGetScoreRequest` and `assertResponseBody` helpers.
 
 **Answer:**
 
 ```go
 func TestGETPlayers(t *testing.T) {
-t.Run("returns Pepper's score", func(t *testing.T) {
-request := newGetScoreRequest("Pepper")
-response := httptest.NewRecorder()
+	t.Run("returns Pepper's score", func(t *testing.T) {
+		request := newGetScoreRequest("Pepper")
+		response := httptest.NewRecorder()
 
-PlayerServer(response, request)
+		PlayerServer(response, request)
 
-assertResponseBody(t, response.Body.String(), "20")
-})
+		assertResponseBody(t, response.Body.String(), "20")
+	})
 
-t.Run("returns Floyd's score", func(t *testing.T) {
-request := newGetScoreRequest("Floyd")
-response := httptest.NewRecorder()
+	t.Run("returns Floyd's score", func(t *testing.T) {
+		request := newGetScoreRequest("Floyd")
+		response := httptest.NewRecorder()
 
-PlayerServer(response, request)
+		PlayerServer(response, request)
 
-assertResponseBody(t, response.Body.String(), "10")
-})
+		assertResponseBody(t, response.Body.String(), "10")
+	})
 }
 
 func newGetScoreRequest(name string) *http.Request {
-req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/players/%s", name), nil)
-return req
+	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/players/%s", name), nil)
+	return req
 }
 
 func assertResponseBody(t testing.TB, got, want string) {
-t.Helper()
-if got != want {
-t.Errorf("response body is wrong, got %q want %q", got, want)
-}
+	t.Helper()
+	if got != want {
+		t.Errorf("response body is wrong, got %q want %q", got, want)
+	}
 }
 ```
 
----
+------
 
-### Exercise 10: Define PlayerStore Interface
+## Section 3: Introducing the PlayerStore Interface
 
-**Task:** Create a `PlayerStore` interface with a `GetPlayerScore` method.
+### Exercise 10
+
+**File:** `server.go`
+ **Expected:** Tests pass ✓ (no behavior change yet)
+
+**Question:** Create a `PlayerStore` interface with a `GetPlayerScore(name string) int` method.
 
 **Answer:**
 
 ```go
 type PlayerStore interface {
-GetPlayerScore(name string) int
+	GetPlayerScore(name string) int
 }
 ```
 
----
+------
 
-### Exercise 11: Convert PlayerServer to a Struct
+### Exercise 11
 
-**Task:** Convert `PlayerServer` from a function to a struct that holds a `PlayerStore`.
+**File:** `server.go`
+ **Expected:** Compilation error - tests need updating
+
+**Question:** Convert `PlayerServer` from a function to a struct that holds a `PlayerStore`.
 
 **Answer:**
 
 ```go
 type PlayerServer struct {
-store PlayerStore
+	store PlayerStore
 }
 ```
 
----
+------
 
-### Exercise 12: Implement ServeHTTP Method
+### Exercise 12
 
-**Task:** Add a `ServeHTTP` method to `PlayerServer` that implements the `Handler` interface.
+**File:** `server.go`
+ **Expected:** Compilation error - tests still need updating
+
+**Question:** Add a `ServeHTTP` method to `PlayerServer` that implements the `Handler` interface.
 
 **Answer:**
 
 ```go
 func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-player := strings.TrimPrefix(r.URL.Path, "/players/")
-fmt.Fprint(w, p.store.GetPlayerScore(player))
+	player := strings.TrimPrefix(r.URL.Path, "/players/")
+	fmt.Fprint(w, p.store.GetPlayerScore(player))
 }
 ```
 
----
+Full server.go at this point:
 
-### Exercise 13: Update Tests to Use PlayerServer Struct
+```go
+package main
 
-**Task:** Update tests to create a `PlayerServer` instance and call `ServeHTTP`.
+import (
+	"fmt"
+	"net/http"
+	"strings"
+)
+
+type PlayerStore interface {
+	GetPlayerScore(name string) int
+}
+
+type PlayerServer struct {
+	store PlayerStore
+}
+
+func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	player := strings.TrimPrefix(r.URL.Path, "/players/")
+	fmt.Fprint(w, p.store.GetPlayerScore(player))
+}
+```
+
+------
+
+### Exercise 13
+
+**File:** `server_test.go`
+ **Expected:** Compilation error - main.go needs updating
+
+**Question:** Update tests to create a `PlayerServer` instance and call `ServeHTTP`.
 
 **Answer:**
 
 ```go
 func TestGETPlayers(t *testing.T) {
-server := &PlayerServer{}
+	server := &PlayerServer{}
 
-t.Run("returns Pepper's score", func(t *testing.T) {
-request := newGetScoreRequest("Pepper")
-response := httptest.NewRecorder()
+	t.Run("returns Pepper's score", func(t *testing.T) {
+		request := newGetScoreRequest("Pepper")
+		response := httptest.NewRecorder()
 
-server.ServeHTTP(response, request)
+		server.ServeHTTP(response, request)
 
-assertResponseBody(t, response.Body.String(), "20")
-})
+		assertResponseBody(t, response.Body.String(), "20")
+	})
 
-t.Run("returns Floyd's score", func(t *testing.T) {
-request := newGetScoreRequest("Floyd")
-response := httptest.NewRecorder()
+	t.Run("returns Floyd's score", func(t *testing.T) {
+		request := newGetScoreRequest("Floyd")
+		response := httptest.NewRecorder()
 
-server.ServeHTTP(response, request)
+		server.ServeHTTP(response, request)
 
-assertResponseBody(t, response.Body.String(), "10")
-})
+		assertResponseBody(t, response.Body.String(), "10")
+	})
 }
 ```
 
----
+------
 
-### Exercise 14: Update main.go for Struct
+### Exercise 14
 
-**Task:** Update `main.go` to create a `PlayerServer` struct instance.
+**File:** `main.go`
+ **Expected:** Runtime panic - `invalid memory address or nil pointer dereference`
+
+**Question:** Update `main.go` to create a `PlayerServer` struct instance.
 
 **Answer:**
 
 ```go
 func main() {
-server := &PlayerServer{}
-log.Fatal(http.ListenAndServe(":5000", server))
+	server := &PlayerServer{}
+	log.Fatal(http.ListenAndServe(":5000", server))
 }
 ```
 
----
+------
 
-### Exercise 15: Create StubPlayerStore for Tests
+### Exercise 15
 
-**Task:** Create a `StubPlayerStore` struct that implements `PlayerStore` using a map.
+**File:** `server_test.go`
+ **Expected:** Runtime panic still (store not injected yet)
+
+**Question:** Create a `StubPlayerStore` struct that implements `PlayerStore` using a map.
 
 **Answer:**
 
 ```go
 type StubPlayerStore struct {
-scores map[string]int
+	scores map[string]int
 }
 
 func (s *StubPlayerStore) GetPlayerScore(name string) int {
-score := s.scores[name]
-return score
+	score := s.scores[name]
+	return score
 }
 ```
 
----
+------
 
-### Exercise 16: Inject StubPlayerStore into Tests
+### Exercise 16
 
-**Task:** Create a `StubPlayerStore` with test data and inject it into `PlayerServer`.
+**File:** `server_test.go`
+ **Expected:** Tests pass ✓
+
+**Question:** Create a `StubPlayerStore` with test data and inject it into `PlayerServer`.
 
 **Answer:**
 
 ```go
 func TestGETPlayers(t *testing.T) {
-store := StubPlayerStore{
-map[string]int{
-"Pepper": 20,
-"Floyd":  10,
-},
-}
-server := &PlayerServer{&store}
+	store := StubPlayerStore{
+		map[string]int{
+			"Pepper": 20,
+			"Floyd":  10,
+		},
+	}
+	server := &PlayerServer{&store}
 
-t.Run("returns Pepper's score", func(t *testing.T) {
-request := newGetScoreRequest("Pepper")
-response := httptest.NewRecorder()
+	t.Run("returns Pepper's score", func(t *testing.T) {
+		request := newGetScoreRequest("Pepper")
+		response := httptest.NewRecorder()
 
-server.ServeHTTP(response, request)
+		server.ServeHTTP(response, request)
 
-assertResponseBody(t, response.Body.String(), "20")
-})
+		assertResponseBody(t, response.Body.String(), "20")
+	})
 
-t.Run("returns Floyd's score", func(t *testing.T) {
-request := newGetScoreRequest("Floyd")
-response := httptest.NewRecorder()
+	t.Run("returns Floyd's score", func(t *testing.T) {
+		request := newGetScoreRequest("Floyd")
+		response := httptest.NewRecorder()
 
-server.ServeHTTP(response, request)
+		server.ServeHTTP(response, request)
 
-assertResponseBody(t, response.Body.String(), "10")
-})
+		assertResponseBody(t, response.Body.String(), "10")
+	})
 }
 ```
 
----
+------
 
-### Exercise 17: Create InMemoryPlayerStore for main.go
+### Exercise 17
 
-**Task:** Create a minimal `InMemoryPlayerStore` in `main.go` that returns a hard-coded value.
+**File:** `main.go`
+ **Expected:** Application runs (returns "123" for all players)
+
+**Question:** Create a minimal `InMemoryPlayerStore` in `main.go` that returns a hard-coded value (123).
 
 **Answer:**
 
 ```go
+package main
+
+import (
+	"log"
+	"net/http"
+)
+
 type InMemoryPlayerStore struct{}
 
 func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
-return 123
+	return 123
 }
 
 func main() {
-server := &PlayerServer{&InMemoryPlayerStore{}}
-log.Fatal(http.ListenAndServe(":5000", server))
+	server := &PlayerServer{&InMemoryPlayerStore{}}
+	log.Fatal(http.ListenAndServe(":5000", server))
 }
 ```
 
----
+------
 
-### Exercise 18: Add Test for Missing Player (404)
+## Section 4: Handling Missing Players (404)
 
-**Task:** Add a test case that expects 404 status for a player not in the store.
+### Exercise 18
+
+**File:** `server_test.go`
+ **Expected:** Test fails with `got status 200 want 404`
+
+**Question:** Add a test case that expects 404 status for a player not in the store.
 
 **Answer:**
 
 ```go
 t.Run("returns 404 on missing players", func(t *testing.T) {
-request := newGetScoreRequest("Apollo")
-response := httptest.NewRecorder()
+	request := newGetScoreRequest("Apollo")
+	response := httptest.NewRecorder()
 
-server.ServeHTTP(response, request)
+	server.ServeHTTP(response, request)
 
-got := response.Code
-want := http.StatusNotFound
+	got := response.Code
+	want := http.StatusNotFound
 
-if got != want {
-t.Errorf("got status %d want %d", got, want)
-}
+	if got != want {
+		t.Errorf("got status %d want %d", got, want)
+	}
 })
 ```
 
----
+------
 
-### Exercise 19: Return 404 (Minimal - All Responses)
+### Exercise 19
 
-**Task:** Make the test pass by writing `StatusNotFound` on all responses (intentionally wrong).
+**File:** `server.go`
+ **Expected:** Tests pass ✓ (but incorrectly - all responses return 404)
+
+**Question:** Make the test pass by writing `StatusNotFound` on all responses (intentionally wrong).
 
 **Answer:**
 
 ```go
 func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-player := strings.TrimPrefix(r.URL.Path, "/players/")
+	player := strings.TrimPrefix(r.URL.Path, "/players/")
 
-w.WriteHeader(http.StatusNotFound)
+	w.WriteHeader(http.StatusNotFound)
 
-fmt.Fprint(w, p.store.GetPlayerScore(player))
+	fmt.Fprint(w, p.store.GetPlayerScore(player))
 }
 ```
 
----
+------
 
-### Exercise 20: Add Status Assertions to Existing Tests
+### Exercise 20
 
-**Task:** Update all test cases to assert status codes and create an `assertStatus` helper.
+**File:** `server_test.go`
+ **Expected:** Tests fail - Pepper and Floyd tests now fail with `got 404, want 200`
+
+**Question:** Update all test cases to assert status codes and create an `assertStatus` helper.
 
 **Answer:**
 
 ```go
 func TestGETPlayers(t *testing.T) {
-store := StubPlayerStore{
-map[string]int{
-"Pepper": 20,
-"Floyd":  10,
-},
-}
-server := &PlayerServer{&store}
+	store := StubPlayerStore{
+		map[string]int{
+			"Pepper": 20,
+			"Floyd":  10,
+		},
+	}
+	server := &PlayerServer{&store}
 
-t.Run("returns Pepper's score", func(t *testing.T) {
-request := newGetScoreRequest("Pepper")
-response := httptest.NewRecorder()
+	t.Run("returns Pepper's score", func(t *testing.T) {
+		request := newGetScoreRequest("Pepper")
+		response := httptest.NewRecorder()
 
-server.ServeHTTP(response, request)
+		server.ServeHTTP(response, request)
 
-assertStatus(t, response.Code, http.StatusOK)
-assertResponseBody(t, response.Body.String(), "20")
-})
+		assertStatus(t, response.Code, http.StatusOK)
+		assertResponseBody(t, response.Body.String(), "20")
+	})
 
-t.Run("returns Floyd's score", func(t *testing.T) {
-request := newGetScoreRequest("Floyd")
-response := httptest.NewRecorder()
+	t.Run("returns Floyd's score", func(t *testing.T) {
+		request := newGetScoreRequest("Floyd")
+		response := httptest.NewRecorder()
 
-server.ServeHTTP(response, request)
+		server.ServeHTTP(response, request)
 
-assertStatus(t, response.Code, http.StatusOK)
-assertResponseBody(t, response.Body.String(), "10")
-})
+		assertStatus(t, response.Code, http.StatusOK)
+		assertResponseBody(t, response.Body.String(), "10")
+	})
 
-t.Run("returns 404 on missing players", func(t *testing.T) {
-request := newGetScoreRequest("Apollo")
-response := httptest.NewRecorder()
+	t.Run("returns 404 on missing players", func(t *testing.T) {
+		request := newGetScoreRequest("Apollo")
+		response := httptest.NewRecorder()
 
-server.ServeHTTP(response, request)
+		server.ServeHTTP(response, request)
 
-assertStatus(t, response.Code, http.StatusNotFound)
-})
+		assertStatus(t, response.Code, http.StatusNotFound)
+	})
 }
 
 func assertStatus(t testing.TB, got, want int) {
-t.Helper()
-if got != want {
-t.Errorf("did not get correct status, got %d, want %d", got, want)
-}
+	t.Helper()
+	if got != want {
+		t.Errorf("did not get correct status, got %d, want %d", got, want)
+	}
 }
 ```
 
----
+------
 
-### Exercise 21: Fix 404 Logic (Only for Missing Players)
+### Exercise 21
 
-**Task:** Update `ServeHTTP` to only return 404 when score is 0.
+**File:** `server.go`
+ **Expected:** Tests pass ✓
+
+**Question:** Update `ServeHTTP` to only return 404 when score is 0.
 
 **Answer:**
 
 ```go
 func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-player := strings.TrimPrefix(r.URL.Path, "/players/")
+	player := strings.TrimPrefix(r.URL.Path, "/players/")
 
-score := p.store.GetPlayerScore(player)
+	score := p.store.GetPlayerScore(player)
 
-if score == 0 {
-w.WriteHeader(http.StatusNotFound)
-}
+	if score == 0 {
+		w.WriteHeader(http.StatusNotFound)
+	}
 
-fmt.Fprint(w, score)
+	fmt.Fprint(w, score)
 }
 ```
 
----
+------
 
-### Exercise 22: Add Test for POST (Status Accepted)
+## Section 5: Handling POST Requests
 
-**Task:** Write a test for `POST /players/{name}` that expects `StatusAccepted`.
+### Exercise 22
+
+**File:** `server_test.go`
+ **Expected:** Test fails with `got status 404, want 202`
+
+**Question:** Write a new test function `TestStoreWins` for `POST /players/{name}` that expects `StatusAccepted`.
 
 **Answer:**
 
 ```go
 func TestStoreWins(t *testing.T) {
-store := StubPlayerStore{
-map[string]int{},
-}
-server := &PlayerServer{&store}
+	store := StubPlayerStore{
+		map[string]int{},
+	}
+	server := &PlayerServer{&store}
 
-t.Run("it returns accepted on POST", func(t *testing.T) {
-request, _ := http.NewRequest(http.MethodPost, "/players/Pepper", nil)
-response := httptest.NewRecorder()
+	t.Run("it returns accepted on POST", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodPost, "/players/Pepper", nil)
+		response := httptest.NewRecorder()
 
-server.ServeHTTP(response, request)
+		server.ServeHTTP(response, request)
 
-assertStatus(t, response.Code, http.StatusAccepted)
-})
+		assertStatus(t, response.Code, http.StatusAccepted)
+	})
 }
 ```
 
----
+------
 
-### Exercise 23: Handle POST Method
+### Exercise 23
 
-**Task:** Add an `if` statement to check for POST method and return `StatusAccepted`.
+**File:** `server.go`
+ **Expected:** Tests pass ✓
+
+**Question:** Add an `if` statement to check for POST method and return `StatusAccepted`.
 
 **Answer:**
 
 ```go
 func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-if r.Method == http.MethodPost {
-w.WriteHeader(http.StatusAccepted)
-return
-}
+	if r.Method == http.MethodPost {
+		w.WriteHeader(http.StatusAccepted)
+		return
+	}
 
-player := strings.TrimPrefix(r.URL.Path, "/players/")
+	player := strings.TrimPrefix(r.URL.Path, "/players/")
 
-score := p.store.GetPlayerScore(player)
+	score := p.store.GetPlayerScore(player)
 
-if score == 0 {
-w.WriteHeader(http.StatusNotFound)
-}
+	if score == 0 {
+		w.WriteHeader(http.StatusNotFound)
+	}
 
-fmt.Fprint(w, score)
+	fmt.Fprint(w, score)
 }
 ```
 
----
+------
 
-### Exercise 24: Refactor with Switch and Extract Methods
+### Exercise 24
 
-**Task:** Refactor `ServeHTTP` to use a switch statement and extract `processWin` and `showScore` methods.
+**File:** `server.go`
+ **Expected:** Tests pass ✓ (refactor)
+
+**Question:** Refactor `ServeHTTP` to use a switch statement and extract `processWin` and `showScore` methods.
 
 **Answer:**
 
 ```go
 func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-switch r.Method {
-case http.MethodPost:
-p.processWin(w)
-case http.MethodGet:
-p.showScore(w, r)
-}
+	switch r.Method {
+	case http.MethodPost:
+		p.processWin(w)
+	case http.MethodGet:
+		p.showScore(w, r)
+	}
 
 }
 
 func (p *PlayerServer) showScore(w http.ResponseWriter, r *http.Request) {
-player := strings.TrimPrefix(r.URL.Path, "/players/")
+	player := strings.TrimPrefix(r.URL.Path, "/players/")
 
-score := p.store.GetPlayerScore(player)
+	score := p.store.GetPlayerScore(player)
 
-if score == 0 {
-w.WriteHeader(http.StatusNotFound)
-}
+	if score == 0 {
+		w.WriteHeader(http.StatusNotFound)
+	}
 
-fmt.Fprint(w, score)
+	fmt.Fprint(w, score)
 }
 
 func (p *PlayerServer) processWin(w http.ResponseWriter) {
-w.WriteHeader(http.StatusAccepted)
+	w.WriteHeader(http.StatusAccepted)
 }
 ```
 
----
+------
 
-### Exercise 25: Add RecordWin to StubPlayerStore
+## Section 6: Recording Wins
 
-**Task:** Extend `StubPlayerStore` with a `winCalls` slice and `RecordWin` method to spy on calls.
+### Exercise 25
+
+**File:** `server_test.go`
+ **Expected:** Compilation error - `too few values in struct initializer`
+
+**Question:** Extend `StubPlayerStore` with a `winCalls []string` field and `RecordWin` method to spy on calls.
 
 **Answer:**
 
 ```go
 type StubPlayerStore struct {
-scores   map[strin]int
-winCalls []string
+	scores   map[string]int
+	winCalls []string
 }
 
 func (s *StubPlayerStore) GetPlayerScore(name string) int {
-score := s.scores[name]
-return score
+	score := s.scores[name]
+	return score
 }
 
 func (s *StubPlayerStore) RecordWin(name string) {
-s.winCalls = append(s.winCalls, name)
+	s.winCalls = append(s.winCalls, name)
 }
 ```
 
----
+------
 
-### Exercise 26: Test That RecordWin Is Called
+### Exercise 26
 
-**Task:** Update `TestStoreWins` to verify that `RecordWin` is called once on POST. Add `newPostWinRequest` helper.
+**File:** `server_test.go`
+ **Expected:** Test fails with `got 0 calls to RecordWin want 1`
+
+**Question:** Update `TestStoreWins` to verify that `RecordWin` is called once on POST. Add `newPostWinRequest` helper. Fix struct initializers by adding `nil` for the new `winCalls` field.
 
 **Answer:**
 
@@ -645,26 +795,26 @@ func newPostWinRequest(name string) *http.Request {
 }
 ```
 
----
-
-### Exercise 27: Update StubPlayerStore Initializers
-
-**Task:** Fix struct initializer errors by adding `nil` for the new `winCalls` field.
-
-**Answer:**
+Also update `TestGETPlayers`:
 
 ```go
 store := StubPlayerStore{
-	map[string]int{},
+	map[string]int{
+		"Pepper": 20,
+		"Floyd":  10,
+	},
 	nil,
 }
 ```
 
----
+------
 
-### Exercise 28: Add RecordWin to PlayerStore Interface
+### Exercise 27
 
-**Task:** Add `RecordWin(name string)` to the `PlayerStore` interface.
+**File:** `server.go`
+ **Expected:** Compilation error - `InMemoryPlayerStore does not implement PlayerStore (missing RecordWin method)`
+
+**Question:** Add `RecordWin(name string)` to the `PlayerStore` interface.
 
 **Answer:**
 
@@ -675,25 +825,35 @@ type PlayerStore interface {
 }
 ```
 
----
+------
 
-### Exercise 29: Add RecordWin to InMemoryPlayerStore
+### Exercise 28
 
-**Task:** Add an empty `RecordWin` method to `InMemoryPlayerStore` to satisfy the interface.
+**File:** `main.go`
+ **Expected:** Test fails with `got 0 calls to RecordWin want 1`
+
+**Question:** Add an empty `RecordWin` method to `InMemoryPlayerStore` to satisfy the interface.
 
 **Answer:**
 
 ```go
 type InMemoryPlayerStore struct{}
 
+func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
+	return 123
+}
+
 func (i *InMemoryPlayerStore) RecordWin(name string) {}
 ```
 
----
+------
 
-### Exercise 30: Call RecordWin in processWin (Hard-coded)
+### Exercise 29
 
-**Task:** Call `RecordWin` in `processWin` with a hard-coded name "Bob".
+**File:** `server.go`
+ **Expected:** Tests pass ✓
+
+**Question:** Call `RecordWin` in `processWin` with a hard-coded name "Bob".
 
 **Answer:**
 
@@ -704,11 +864,14 @@ func (p *PlayerServer) processWin(w http.ResponseWriter) {
 }
 ```
 
----
+------
 
-### Exercise 31: Test Correct Player Name Is Recorded
+### Exercise 30
 
-**Task:** Update the test to verify the correct player name is passed to `RecordWin`.
+**File:** `server_test.go`
+ **Expected:** Test fails with `did not store correct winner got 'Bob' want 'Pepper'`
+
+**Question:** Update the test to verify the correct player name is passed to `RecordWin`.
 
 **Answer:**
 
@@ -741,15 +904,29 @@ func TestStoreWins(t *testing.T) {
 }
 ```
 
----
+------
 
-### Exercise 32: Extract Player Name in processWin
+### Exercise 31
 
-**Task:** Update `processWin` to accept `http.Request` and extract the player name from URL.
+**File:** `server.go`
+ **Expected:** Tests pass ✓
+
+**Question:** Update `processWin` to accept `http.Request` and extract the player name from URL. Update the switch statement to pass the request.
 
 **Answer:**
 
 ```go
+func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
+	switch r.Method {
+	case http.MethodPost:
+		p.processWin(w, r)
+	case http.MethodGet:
+		p.showScore(w, r)
+	}
+
+}
+
 func (p *PlayerServer) processWin(w http.ResponseWriter, r *http.Request) {
 	player := strings.TrimPrefix(r.URL.Path, "/players/")
 	p.store.RecordWin(player)
@@ -757,11 +934,14 @@ func (p *PlayerServer) processWin(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
----
+------
 
-### Exercise 33: Refactor - Extract Player Name Once
+### Exercise 32
 
-**Task:** DRY up by extracting player name once in `ServeHTTP` and passing it to both methods.
+**File:** `server.go`
+ **Expected:** Tests pass ✓ (refactor)
+
+**Question:** DRY up by extracting player name once in `ServeHTTP` and passing it to both methods.
 
 **Answer:**
 
@@ -793,11 +973,16 @@ func (p *PlayerServer) processWin(w http.ResponseWriter, player string) {
 }
 ```
 
----
+------
 
-### Exercise 34: Write Integration Test
+## Section 7: Integration Test
 
-**Task:** Create `server_integration_test.go` that tests `PlayerServer` with `InMemoryPlayerStore` - POST 3 wins then GET score.
+### Exercise 33
+
+**File:** `server_integration_test.go` (create new)
+ **Expected:** Test fails with `got '123' want '3'`
+
+**Question:** Create `server_integration_test.go` that tests `PlayerServer` with `InMemoryPlayerStore` - POST 3 wins then GET score.
 
 **Answer:**
 
@@ -827,21 +1012,26 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 }
 ```
 
----
+------
 
-### Exercise 35: Implement Real InMemoryPlayerStore
+### Exercise 34
 
-**Task:** Create `in_memory_player_store.go` with a working `InMemoryPlayerStore` that uses a map and a constructor.
+**File:** `in_memory_player_store.go` (create new)
+ **Expected:** Tests pass ✓
+
+**Question:** Create `in_memory_player_store.go` with a working `InMemoryPlayerStore` that uses a map and a constructor.
 
 **Answer:**
 
 ```go
-func NewInMemoryPlayerStore() *InMemoryPlayerStore {
-	return &InMemoryPlayerStore{map[string]int{}}
-}
+package main
 
 type InMemoryPlayerStore struct {
 	store map[string]int
+}
+
+func NewInMemoryPlayerStore() *InMemoryPlayerStore {
+	return &InMemoryPlayerStore{map[string]int{}}
 }
 
 func (i *InMemoryPlayerStore) RecordWin(name string) {
@@ -853,22 +1043,280 @@ func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
 }
 ```
 
+------
+
+### Exercise 35
+
+**File:** `server_integration_test.go`
+ **Expected:** Tests pass ✓
+
+**Question:** Update the integration test to use `NewInMemoryPlayerStore()`.
+
+**Answer:**
 
 ```go
 func TestRecordingWinsAndRetrievingThem(t *testing.T) {
-	store := NewInMemoryPlayerStore{}
+	store := NewInMemoryPlayerStore()
 	server := PlayerServer{store}
-	
-	...
+	player := "Pepper"
+
+	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
+	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
+	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
+
+	response := httptest.NewRecorder()
+	server.ServeHTTP(response, newGetScoreRequest(player))
+	assertStatus(t, response.Code, http.StatusOK)
+
+	assertResponseBody(t, response.Body.String(), "3")
+}
 ```
 
----
+------
 
-### Exercise 36: Update main.go to Use NewInMemoryPlayerStore
+### Exercise 36
 
-**Task:** Update `main.go` to use the constructor function.
+**File:** `main.go`
+ **Expected:** Application works correctly
+
+**Question:** Update `main.go` to use the `NewInMemoryPlayerStore` constructor. Remove the old `InMemoryPlayerStore` from main.go.
 
 **Answer:**
+
+```go
+package main
+
+import (
+	"log"
+	"net/http"
+)
+
+func main() {
+	server := &PlayerServer{NewInMemoryPlayerStore()}
+	log.Fatal(http.ListenAndServe(":5000", server))
+}
+```
+
+------
+
+## Final Code Listing
+
+### server.go
+
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+	"strings"
+)
+
+type PlayerStore interface {
+	GetPlayerScore(name string) int
+	RecordWin(name string)
+}
+
+type PlayerServer struct {
+	store PlayerStore
+}
+
+func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	player := strings.TrimPrefix(r.URL.Path, "/players/")
+
+	switch r.Method {
+	case http.MethodPost:
+		p.processWin(w, player)
+	case http.MethodGet:
+		p.showScore(w, player)
+	}
+}
+
+func (p *PlayerServer) showScore(w http.ResponseWriter, player string) {
+	score := p.store.GetPlayerScore(player)
+
+	if score == 0 {
+		w.WriteHeader(http.StatusNotFound)
+	}
+
+	fmt.Fprint(w, score)
+}
+
+func (p *PlayerServer) processWin(w http.ResponseWriter, player string) {
+	p.store.RecordWin(player)
+	w.WriteHeader(http.StatusAccepted)
+}
+```
+
+### server_test.go
+
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+)
+
+type StubPlayerStore struct {
+	scores   map[string]int
+	winCalls []string
+}
+
+func (s *StubPlayerStore) GetPlayerScore(name string) int {
+	score := s.scores[name]
+	return score
+}
+
+func (s *StubPlayerStore) RecordWin(name string) {
+	s.winCalls = append(s.winCalls, name)
+}
+
+func TestGETPlayers(t *testing.T) {
+	store := StubPlayerStore{
+		map[string]int{
+			"Pepper": 20,
+			"Floyd":  10,
+		},
+		nil,
+	}
+	server := &PlayerServer{&store}
+
+	t.Run("returns Pepper's score", func(t *testing.T) {
+		request := newGetScoreRequest("Pepper")
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assertStatus(t, response.Code, http.StatusOK)
+		assertResponseBody(t, response.Body.String(), "20")
+	})
+
+	t.Run("returns Floyd's score", func(t *testing.T) {
+		request := newGetScoreRequest("Floyd")
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assertStatus(t, response.Code, http.StatusOK)
+		assertResponseBody(t, response.Body.String(), "10")
+	})
+
+	t.Run("returns 404 on missing players", func(t *testing.T) {
+		request := newGetScoreRequest("Apollo")
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assertStatus(t, response.Code, http.StatusNotFound)
+	})
+}
+
+func TestStoreWins(t *testing.T) {
+	store := StubPlayerStore{
+		map[string]int{},
+		nil,
+	}
+	server := &PlayerServer{&store}
+
+	t.Run("it records wins on POST", func(t *testing.T) {
+		player := "Pepper"
+
+		request := newPostWinRequest(player)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assertStatus(t, response.Code, http.StatusAccepted)
+
+		if len(store.winCalls) != 1 {
+			t.Fatalf("got %d calls to RecordWin want %d", len(store.winCalls), 1)
+		}
+
+		if store.winCalls[0] != player {
+			t.Errorf("did not store correct winner got %q want %q", store.winCalls[0], player)
+		}
+	})
+}
+
+func newGetScoreRequest(name string) *http.Request {
+	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/players/%s", name), nil)
+	return req
+}
+
+func newPostWinRequest(name string) *http.Request {
+	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/players/%s", name), nil)
+	return req
+}
+
+func assertStatus(t testing.TB, got, want int) {
+	t.Helper()
+	if got != want {
+		t.Errorf("did not get correct status, got %d, want %d", got, want)
+	}
+}
+
+func assertResponseBody(t testing.TB, got, want string) {
+	t.Helper()
+	if got != want {
+		t.Errorf("response body is wrong, got %q want %q", got, want)
+	}
+}
+```
+
+### in_memory_player_store.go
+
+```go
+package main
+
+type InMemoryPlayerStore struct {
+	store map[string]int
+}
+
+func NewInMemoryPlayerStore() *InMemoryPlayerStore {
+	return &InMemoryPlayerStore{map[string]int{}}
+}
+
+func (i *InMemoryPlayerStore) RecordWin(name string) {
+	i.store[name]++
+}
+
+func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
+	return i.store[name]
+}
+```
+
+### server_integration_test.go
+
+```go
+package main
+
+import (
+	"net/http"
+	"net/http/httptest"
+	"testing"
+)
+
+func TestRecordingWinsAndRetrievingThem(t *testing.T) {
+	store := NewInMemoryPlayerStore()
+	server := PlayerServer{store}
+	player := "Pepper"
+
+	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
+	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
+	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
+
+	response := httptest.NewRecorder()
+	server.ServeHTTP(response, newGetScoreRequest(player))
+	assertStatus(t, response.Code, http.StatusOK)
+
+	assertResponseBody(t, response.Body.String(), "3")
+}
+```
+
+### main.go
 
 ```go
 package main
