@@ -192,7 +192,7 @@ Add a test case that expects 404 status for a player not in the store.
 
 ------
 
-### Exercise 19 x
+### Exercise 19
 
 **File:** `server.go`
  **Expected:** Tests pass ✓ (but incorrectly - all responses return 404)
@@ -363,7 +363,7 @@ DRY up by extracting player name once in `ServeHTTP` and passing it to both meth
 
 ## Section 7: Integration Test
 
-### Exercise 33 x
+### Exercise 33 xxxxxx
 
 **File:** `server_integration_test.go` (create new)
  **Expected:** Test fails with `got '123' want '3'`
@@ -372,7 +372,7 @@ Create `server_integration_test.go` that tests `PlayerServer` with `InMemoryPlay
 
 ------
 
-### Exercise 34 x
+### Exercise 34 xxxxx
 
 **File:** `in_memory_player_store.go` (create new)
  **Expected:** Tests fails

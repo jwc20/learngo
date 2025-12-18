@@ -15,6 +15,8 @@ type PlayerServer struct {
 	store PlayerStore
 }
 
+// ------------------------------------------------------------------------
+
 func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	player := strings.TrimPrefix(r.URL.Path, "/players/")
 
@@ -22,18 +24,19 @@ func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		p.processWin(w, player)
 	case http.MethodGet:
-		p.showScore(w, player)
+		fmt.Fprint(w, p.showScore(w, player))
 	}
 }
 
-func (p *PlayerServer) showScore(w http.ResponseWriter, player string) {
+// ------------------------------------------------------------------------
+
+func (p *PlayerServer) showScore(w http.ResponseWriter, player string) int {
 	score := p.store.GetPlayerScore(player)
 
 	if score == 0 {
 		w.WriteHeader(http.StatusNotFound)
 	}
-
-	fmt.Fprint(w, score)
+	return score
 }
 
 func (p *PlayerServer) processWin(w http.ResponseWriter, player string) {

@@ -8,50 +8,49 @@ import (
 )
 
 type StubPlayerStore struct {
-	scores   map[string]int
+	score    map[string]int
 	winCalls []string
 }
 
-func (s *StubPlayerStore) GetPlayerScore(name string) int {
-	return s.scores[name]
+func (s *StubPlayerStore) GetPlayerScore(player string) int {
+	return s.score[player]
 }
 
-func (s *StubPlayerStore) RecordWin(name string) {
-	s.winCalls = append(s.winCalls, name)
+func (s *StubPlayerStore) RecordWin(player string) {
+	s.winCalls = append(s.winCalls, player)
 }
 
-// ---------------------------------------------------------------------------
-// ---------------------------------------------------------------------------
+// ------------------------------------------------------------------------
 
 func TestStoreWins(t *testing.T) {
-	store := StubPlayerStore{
-		map[string]int{},
-		nil,
-	}
+	store := StubPlayerStore{}
 	server := &PlayerServer{&store}
+	player := "Pepper"
 
-	t.Run("it records wins when POST", func(t *testing.T) {
-		request := newPostWinRequest("Pepper")
-		response := httptest.NewRecorder()
+	request := newPostWinRequest(player)
+	response := httptest.NewRecorder()
 
-		server.ServeHTTP(response, request)
+	server.ServeHTTP(response, request)
 
-		assertStatus(t, response.Code, http.StatusAccepted)
+	assertStatus(t, response.Code, http.StatusAccepted)
 
-		if len(store.winCalls) != 1 {
-			t.Errorf("got %d calls to RecordWin want %d", len(store.winCalls), 1)
-		}
+	if len(store.winCalls) != 1 {
+		t.Errorf("got %d calls to RecordWin want %d", len(store.winCalls), 1)
+	}
 
-		if store.winCalls[0] != "Pepper" {
-			t.Errorf("got %q want %q", store.winCalls[0], "Pepper")
-		}
-	})
+	if store.winCalls[0] != player {
+		t.Errorf("got %q want %q", store.winCalls[0], player)
+	}
 }
 
-// ---------------------------------------------------------------------------
-// ---------------------------------------------------------------------------
+func newPostWinRequest(player string) *http.Request {
+	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/players/%s", player), nil)
+	return req
+}
 
-func TestPlayerServer(t *testing.T) {
+// ------------------------------------------------------------------------
+
+func TestServer(t *testing.T) {
 	store := StubPlayerStore{
 		map[string]int{
 			"Pepper": 20,
@@ -60,7 +59,6 @@ func TestPlayerServer(t *testing.T) {
 		nil,
 	}
 	server := &PlayerServer{&store}
-
 	t.Run("returns Pepper's score", func(t *testing.T) {
 		request := newGetScoreRequest("Pepper")
 		response := httptest.NewRecorder()
@@ -68,51 +66,42 @@ func TestPlayerServer(t *testing.T) {
 		assertStatus(t, response.Code, http.StatusOK)
 		assertResponseBody(t, response.Body.String(), "20")
 	})
-
-	t.Run("retuns Floyd's score", func(t *testing.T) {
+	t.Run("returns Floyd's score", func(t *testing.T) {
 		request := newGetScoreRequest("Floyd")
 		response := httptest.NewRecorder()
 		server.ServeHTTP(response, request)
 		assertStatus(t, response.Code, http.StatusOK)
 		assertResponseBody(t, response.Body.String(), "10")
 	})
-
-	t.Run("returns 404 on missing players", func(t *testing.T) {
-		request := newGetScoreRequest("Atlas")
+	t.Run("returns 404 if no players", func(t *testing.T) {
+		request := newGetScoreRequest("Asss")
 		response := httptest.NewRecorder()
 		server.ServeHTTP(response, request)
-
 		assertStatus(t, response.Code, http.StatusNotFound)
 	})
 }
 
-// ---------------------------------------------------------------------------
-// --asserts------------------------------------------------------------------
-// ---------------------------------------------------------------------------
+// --helpers-------------------------------------------------------------------
 
-func assertStatus(t testing.TB, got, want int) {
-	if got != want {
-		t.Errorf("got %d want %d", got, want)
-	}
+func newGetScoreRequest(player string) *http.Request {
+	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/players/%s", player), nil)
+	return req
 }
 
-func assertResponseBody(t testing.TB, got string, want string) {
+// --asserts-------------------------------------------------------------------
+
+func assertResponseBody(t *testing.T, got, want string) {
 	t.Helper()
 	if got != want {
 		t.Errorf("got %q want %q", got, want)
 	}
 }
 
-// ---------------------------------------------------------------------------
-// --helpers------------------------------------------------------------------
-// ---------------------------------------------------------------------------
-
-func newPostWinRequest(name string) *http.Request {
-	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/players/%s", name), nil)
-	return req
+func assertStatus(t *testing.T, got, want int) {
+	t.Helper()
+	if got != want {
+		t.Errorf("got %d want %d", got, want)
+	}
 }
 
-func newGetScoreRequest(name string) *http.Request {
-	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/players/%s", name), nil)
-	return req
-}
+// ------------------------------------------------------------------------

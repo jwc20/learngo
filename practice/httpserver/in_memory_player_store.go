@@ -1,11 +1,11 @@
 package main
 
-func NewInMemoryPlayerStore() *InMemoryPlayerStore {
-	return &InMemoryPlayerStore{map[string]int{}}
-}
-
 type InMemoryPlayerStore struct {
 	store map[string]int
+}
+
+func NewInMemoryPlayerStore() *InMemoryPlayerStore {
+	return &InMemoryPlayerStore{map[string]int{}}
 }
 
 func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
