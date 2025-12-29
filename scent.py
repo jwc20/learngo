@@ -28,14 +28,17 @@ ignore_dirs = [
     "romannumerals",
     "math",
     "http-server",
+    "httpserver",
+    "_httpserver_20251228",
     "_httpserver",
     "__httpserver",
     "_httpserver_20251218",
-    "json",
     "io",
     "commandline",
     "time",
     "websockets",
+    "_json_start",
+    "json",
 ]
 
 
