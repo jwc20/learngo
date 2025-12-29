@@ -13,7 +13,7 @@ Add a new test function `TestLeague` that makes a GET request to `/league` and a
 
 ---
 
-## Exercise 2
+## Exercise 2 x
 **File:** `server.go`
 **Expected:** All tests pass
 
@@ -21,7 +21,7 @@ Update `ServeHTTP` to use `http.NewServeMux()` for routing. Handle `/league` to 
 
 ---
 
-## Exercise 3
+## Exercise 3 x
 **File:** `server.go`
 **Expected:** All tests pass (refactor)
 
@@ -29,7 +29,7 @@ Extract the inline handler functions into separate methods `leagueHandler` and `
 
 ---
 
-## Exercise 4
+## Exercise 4 x
 **File:** `server.go`
 **Expected:** Compilation error - tests need updating
 
@@ -45,11 +45,13 @@ Replace all instances of `&PlayerServer{&store}` or `PlayerServer{&store}` with 
 
 ---
 
-## Exercise 6
+## Exercise 6 x
 **File:** `server.go`
 **Expected:** All tests pass (refactor)
 
-Replace the named `router *http.ServeMux` field with an embedded `http.Handler`. Update `NewPlayerServer` to assign the router to `p.Handler`. Delete the `ServeHTTP` method (it's now provided by embedding).
+Replace the named `router *http.ServeMux` field with an embedded `http.Handler`. 
+
+Update `NewPlayerServer` to assign the router to `p.Handler`. Delete the `ServeHTTP` method (it's now provided by embedding).
 
 ---
 
@@ -61,15 +63,17 @@ Create a `Player` struct with `Name` (string) and `Wins` (int) fields to represe
 
 ---
 
-## Exercise 8
+## Exercise 8 x
 **File:** `server_test.go`
 **Expected:** Test fails with `Unable to parse response from server '' into slice of Player, 'unexpected end of JSON input'`
 
-Update the `TestLeague` test to decode the response body as JSON into a `[]Player` slice. Import `encoding/json`.
+Update the `TestLeague` test to decode the response body as JSON into a `[]Player` slice. 
+
+Import `encoding/json`.
 
 ---
 
-## Exercise 9
+## Exercise 9 x
 **File:** `server.go`
 **Expected:** All tests pass
 
@@ -77,7 +81,7 @@ Update `leagueHandler` to encode and return a hard-coded slice containing one `P
 
 ---
 
-## Exercise 10
+## Exercise 10 x
 **File:** `server.go`
 **Expected:** All tests pass (refactor)
 
@@ -93,11 +97,13 @@ Add a `league []Player` field to `StubPlayerStore`.
 
 ---
 
-## Exercise 12
+## Exercise 12 x
 **File:** `server_test.go`
 **Expected:** Test fails with `got [{Chris 20}] want [{Cleo 32} {Chris 20} {Tiest 14}]`
 
-Update `TestLeague` to create a `wantedLeague` with 3 players, pass it to the stub, and assert the response matches using `reflect.DeepEqual`. Update all other `StubPlayerStore` initializers to include `nil` for the league field.
+Update `TestLeague` to create a `wantedLeague` with 3 players, pass it to the stub, and assert the response matches using `reflect.DeepEqual`. 
+
+Update all other `StubPlayerStore` initializers to include `nil` for the league field.
 
 ---
 
@@ -133,7 +139,7 @@ Update `leagueHandler` to call `p.store.GetLeague()` instead of `p.getLeagueTabl
 
 ---
 
-## Exercise 17
+## Exercise 17 xxx
 **File:** `server_test.go`
 **Expected:** All tests pass (refactor)
 
@@ -141,7 +147,7 @@ Create helper functions: `getLeagueFromResponse`, `assertLeague`, and `newLeague
 
 ---
 
-## Exercise 18
+## Exercise 18 x
 **File:** `server_test.go`
 **Expected:** Test fails with `response did not have content-type of application/json`
 
@@ -149,7 +155,7 @@ Add an assertion to check that the response has `content-type` header set to `ap
 
 ---
 
-## Exercise 19
+## Exercise 19 x
 **File:** `server.go`
 **Expected:** All tests pass
 
@@ -157,7 +163,7 @@ Update `leagueHandler` to set the `content-type` header to `application/json` be
 
 ---
 
-## Exercise 20
+## Exercise 20 xx
 **Files:** `server.go`, `server_test.go`
 **Expected:** All tests pass (refactor)
 
@@ -173,7 +179,7 @@ Update the integration test to use `t.Run` for subtests. Add a "get league" subt
 
 ---
 
-## Exercise 22
+## Exercise 22 xxx
 **File:** `in_memory_player_store.go`
 **Expected:** All tests pass
 

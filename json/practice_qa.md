@@ -595,7 +595,7 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 func (i *InMemoryPlayerStore) GetLeague() []Player {
 	var league []Player
 	for name, wins := range i.store {
-		league = append(league, Player{name, wins})
+		leageue = append(league, Player{name, wins})
 	}
 	return league
 }
