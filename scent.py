@@ -39,6 +39,9 @@ ignore_dirs = [
     "websockets",
     "_json_start",
     "json",
+    "_json_practice_20251230",
+    "_json_practice_20251229",
+    "_io_start",
 ]
 
 
