@@ -28,7 +28,6 @@ ignore_dirs = [
     "romannumerals",
     "math",
     "http-server",
-    "httpserver",
     "_httpserver_20251228",
     "_httpserver",
     "__httpserver",
@@ -42,6 +41,8 @@ ignore_dirs = [
     "_json_practice_20251230",
     "_json_practice_20251229",
     "_io_start",
+    "_io_20241231",
+    "___httpserver_orig",
 ]
 
 
