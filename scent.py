@@ -44,6 +44,7 @@ ignore_dirs = [
     "_io_20241231",
     "___httpserver_orig",
     "httpserver",
+    "start",
 ]
 
 
