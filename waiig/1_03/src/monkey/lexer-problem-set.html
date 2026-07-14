@@ -161,8 +161,9 @@ code {
 
 <h1>Lexer Problem Set — Build Steps</h1>
 
+
 <div class="qa-item">
-<h2><span class="qnum">Q1.</span>Define the <code>Lexer</code> struct with its four fields, and a first version of <code>New()</code> that just wraps the input (no character reading yet).</h2>
+<h2><span class="qnum">Q1.</span>Define a <code>Lexer</code> struct in package <code>lexer</code> with four fields — <code>input string</code>, <code>position int</code>, <code>readPosition int</code>, <code>ch byte</code> — and a first version of <code>func New(input string) *Lexer</code> that only sets <code>input</code> on a <code>&amp;Lexer{}</code> and returns it (no call to any character-reading method yet).</h2>
 <details>
 <summary>Show answer</summary>
 <div class="answer">
@@ -185,7 +186,7 @@ func New(input string) *Lexer {
 </div>
 
 <div class="qa-item">
-<h2><span class="qnum">Q2.</span>Write <code>readChar()</code> — the method that reads the next character and advances <code>position</code>/<code>readPosition</code>.</h2>
+<h2><span class="qnum">Q2.</span>Write <code>func (l *Lexer) readChar()</code> (no parameters, no return value) that reads the byte at <code>l.input[l.readPosition]</code> into <code>l.ch</code> — or sets <code>l.ch = 0</code> if <code>l.readPosition &gt;= len(l.input)</code> — then updates <code>l.position = l.readPosition</code> and increments <code>l.readPosition</code> by 1.</h2>
 <details>
 <summary>Show answer</summary>
 <div class="answer">
@@ -204,7 +205,7 @@ func New(input string) *Lexer {
 </div>
 
 <div class="qa-item">
-<h2><span class="qnum">Q3.</span>Update <code>New()</code> so the lexer is fully initialized (<code>l.ch</code>, <code>l.position</code>, <code>l.readPosition</code> all set) before anyone calls <code>NextToken()</code>.</h2>
+<h2><span class="qnum">Q3.</span>Update <code>func New(input string) *Lexer</code> so that after building <code>l := &amp;Lexer{input: input}</code>, it calls <code>l.readChar()</code> once before <code>return l</code>, so <code>l.ch</code>, <code>l.position</code>, and <code>l.readPosition</code> are all set correctly before the lexer is ever used.</h2>
 <details>
 <summary>Show answer</summary>
 <div class="answer">
@@ -219,7 +220,7 @@ func New(input string) *Lexer {
 </div>
 
 <div class="qa-item">
-<h2><span class="qnum">Q4.</span>Write the first working version of <code>NextToken()</code>, covering <code>= ; ( ) , + { }</code> and EOF, plus the <code>newToken()</code> helper it uses.</h2>
+<h2><span class="qnum">Q4.</span>Write <code>func (l *Lexer) NextToken() token.Token</code>, returning a <code>token.Token{Type token.TokenType, Literal string}</code> built from a <code>switch</code> on <code>l.ch</code> that covers: <code>&#39;=&#39;</code> → <code>ASSIGN</code>, <code>&#39;;&#39;</code> → <code>SEMICOLON</code>, <code>&#39;(&#39;</code> → <code>LPAREN</code>, <code>&#39;)&#39;</code> → <code>RPAREN</code>, <code>&#39;,&#39;</code> → <code>COMMA</code>, <code>&#39;+&#39;</code> → <code>PLUS</code>, <code>&#39;{&#39;</code> → <code>LBRACE</code>, <code>&#39;}&#39;</code> → <code>RBRACE</code>, and <code>0</code> → <code>EOF</code> with <code>Literal = &quot;&quot;</code>. Also write <code>func newToken(tokenType token.TokenType, ch byte) token.Token</code>, which every other case calls to build its token from a single byte.</h2>
 <details>
 <summary>Show answer</summary>
 <div class="answer">
@@ -265,7 +266,7 @@ func newToken(tokenType token.TokenType, ch byte) token.Token {
 </div>
 
 <div class="qa-item">
-<h2><span class="qnum">Q5.</span>Add a <code>default</code> branch to <code>NextToken()</code> that recognizes identifiers, along with the <code>isLetter()</code> and <code>readIdentifier()</code> functions it depends on. (At this point, don't worry yet about telling keywords apart from user identifiers — just get the raw identifier text out.)</h2>
+<h2><span class="qnum">Q5.</span>Add a <code>default</code> case to the <code>switch</code> in <code>NextToken()</code> that calls <code>func isLetter(ch byte) bool</code> (returning <code>true</code> for <code>&#39;a&#39;-&#39;z&#39;</code>, <code>&#39;A&#39;-&#39;Z&#39;</code>, and <code>&#39;_&#39;</code>). If <code>isLetter(l.ch)</code> is true, call a new method <code>func (l *Lexer) readIdentifier() string</code> — which loops <code>l.readChar()</code> while <code>isLetter(l.ch)</code> holds and returns <code>l.input[position:l.position]</code> — assign its result to <code>tok.Literal</code>, and <code>return tok</code> immediately (skipping the trailing <code>l.readChar()</code> at the bottom of <code>NextToken()</code>). Anything else in <code>default</code> should fall back to <code>newToken(token.ILLEGAL, l.ch)</code>.</h2>
 <details>
 <summary>Show answer</summary>
 <div class="answer">
@@ -304,7 +305,7 @@ func isLetter(ch byte) bool {
 </div>
 
 <div class="qa-item">
-<h2><span class="qnum">Q6.</span>In <code>token.go</code>, add the <code>keywords</code> map and a <code>LookupIdent()</code> function that tells keywords apart from plain identifiers.</h2>
+<h2><span class="qnum">Q6.</span>In <code>token.go</code>, add a package-level <code>var keywords = map[string]TokenType{&quot;fn&quot;: FUNCTION, &quot;let&quot;: LET}</code> and a function <code>func LookupIdent(ident string) TokenType</code> that returns the matching <code>TokenType</code> from <code>keywords</code> if <code>ident</code> is found there, and returns <code>IDENT</code> otherwise.</h2>
 <details>
 <summary>Show answer</summary>
 <div class="answer">
@@ -327,7 +328,7 @@ func LookupIdent(ident string) TokenType {
 </div>
 
 <div class="qa-item">
-<h2><span class="qnum">Q7.</span>Update the <code>default</code> branch in <code>NextToken()</code> to use <code>LookupIdent()</code> so <code>tok.Type</code> is set correctly for both keywords and identifiers.</h2>
+<h2><span class="qnum">Q7.</span>Update the <code>default</code> case in <code>NextToken()</code> so that right after <code>tok.Literal = l.readIdentifier()</code>, it also sets <code>tok.Type = token.LookupIdent(tok.Literal)</code> — before the existing <code>return tok</code>.</h2>
 <details>
 <summary>Show answer</summary>
 <div class="answer">
@@ -345,7 +346,7 @@ func LookupIdent(ident string) TokenType {
 </div>
 
 <div class="qa-item">
-<h2><span class="qnum">Q8.</span>A test on real Monkey source (<code>let five = 5; ...</code>) failed on the whitespace between <code>let</code> and <code>five</code>. Write <code>skipWhitespace()</code> and wire it into <code>NextToken()</code> to fix it.</h2>
+<h2><span class="qnum">Q8.</span>Add <code>func (l *Lexer) skipWhitespace()</code> (no return value) that loops calling <code>l.readChar()</code> for as long as <code>l.ch</code> is <code>&#39; &#39;</code>, <code>&#39;\t&#39;</code>, <code>&#39;\n&#39;</code>, or <code>&#39;\r&#39;</code>. Call <code>l.skipWhitespace()</code> as the very first line inside <code>NextToken()</code>, before the <code>switch l.ch</code> statement.</h2>
 <details>
 <summary>Show answer</summary>
 <div class="answer">
@@ -371,7 +372,7 @@ func (l *Lexer) skipWhitespace() {
 </div>
 
 <div class="qa-item">
-<h2><span class="qnum">Q9.</span>Add support for integer literals: write <code>readNumber()</code> and <code>isDigit()</code>, and extend the <code>default</code> branch to use them.</h2>
+<h2><span class="qnum">Q9.</span>Add <code>func isDigit(ch byte) bool</code> (true for <code>&#39;0&#39;-&#39;9&#39;</code>) and <code>func (l *Lexer) readNumber() string</code> — the same shape as <code>readIdentifier()</code> but looping on <code>isDigit(l.ch)</code> instead of <code>isLetter(l.ch)</code>. Extend the <code>default</code> case in <code>NextToken()</code> with an <code>else if isDigit(l.ch)</code> branch that sets <code>tok.Type = token.INT</code> and <code>tok.Literal = l.readNumber()</code>, then <code>return tok</code>.</h2>
 <details>
 <summary>Show answer</summary>
 <div class="answer">
