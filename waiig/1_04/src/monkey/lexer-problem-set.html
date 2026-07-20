@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lexer Problem Set — Build Steps</title>
+<style>
+html {
+  scrollbar-gutter: stable;
+}
+
+body {
+  line-height: 1.4;
+  font-size: 16px;
+  padding: 0 10px;
+  margin: 50px auto;
+  max-width: 650px;
+}
+
+#maincontent {
+  max-width: 42em;
+  margin: 70px auto 15px;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 20px auto;
+}
+
+a.plain-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+a.plain-link:hover {
+  text-decoration: underline;
+}
+
+.email-link {
+  cursor: pointer;
+  color: #0066cc;
+  text-decoration: underline;
+}
+
+.email-link:hover {
+  color: #0052a3;
+}
+
+.site-footer {
+  margin: 60px auto 30px;
+  max-width: 650px;
+  padding: 18px 10px 0;
+}
+
+/* --- problem set specific styles --- */
+
+.intro {
+  color: #444;
+  margin-bottom: 40px;
+}
+
+.qa-item {
+  margin-bottom: 14px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.qa-item:last-of-type {
+  border-bottom: none;
+}
+
+.qa-item h2 {
+  font-size: 1.05em;
+  line-height: 1.45;
+  margin: 0 0 10px;
+}
+
+.qa-item h2 .qnum {
+  color: #888;
+  font-weight: 600;
+  margin-right: 6px;
+}
+
+details {
+  margin: 0 0 26px;
+}
+
+summary {
+  cursor: pointer;
+  color: #0066cc;
+  font-weight: 600;
+  padding: 6px 0;
+  list-style: none;
+  user-select: none;
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
+
+summary::before {
+  content: "▸ ";
+  display: inline-block;
+  transition: transform 0.15s ease;
+}
+
+details[open] summary::before {
+  content: "▾ ";
+}
+
+summary:hover {
+  color: #0052a3;
+}
+
+details[open] summary {
+  color: #444;
+  font-weight: 600;
+}
+
+.answer {
+  margin-top: 10px;
+  animation: reveal 0.15s ease;
+}
+
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(-2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+pre {
+  background: #f6f6f6;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  font-size: 0.85em;
+  line-height: 1.5;
+  margin: 0 0 12px;
+}
+
+code {
+  font-family: "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+.why {
+  color: #444;
+  font-size: 0.95em;
+  margin: 0;
+}
+
+.why strong {
+  color: #111;
+}
+</style>
+</head>
+<body>
+
+<div id="maincontent">
+
+<h1>Lexer Problem Set — Build Steps</h1>
+
+
+<div class="qa-item">
+<h2><span class="qnum">Q1.</span>Define a <code>Lexer</code> struct in package <code>lexer</code> with four fields — <code>input string</code>, <code>position int</code>, <code>readPosition int</code>, <code>ch byte</code> — and a first version of <code>func New(input string) *Lexer</code> that only sets <code>input</code> on a <code>&amp;Lexer{}</code> and returns it (no call to any character-reading method yet).</h2>
+<details>
+<summary>Show answer</summary>
+<div class="answer">
+<pre><code>package lexer
+
+type Lexer struct {
+	input        string
+	position     int  // current position in input (points to current char)
+	readPosition int  // current reading position in input (after current char)
+	ch           byte // current char under examination
+}
+
+func New(input string) *Lexer {
+	l := &amp;Lexer{input: input}
+	return l
+}</code></pre>
+<p class="why"><strong>Why:</strong> <code>position</code> and <code>readPosition</code> exist as two separate fields because the lexer will need to "peek" past the current character to see what comes next, and one index can't represent both "current" and "next" at once. <code>input</code> is kept as a plain <code>string</code> rather than an <code>io.Reader</code> to avoid the extra complexity of tracking filenames and line numbers — that's left for a production implementation.</p>
+</div>
+</details>
+</div>
+
+<div class="qa-item">
+<h2><span class="qnum">Q2.</span>Write <code>func (l *Lexer) readChar()</code> (no parameters, no return value) that reads the byte at <code>l.input[l.readPosition]</code> into <code>l.ch</code> — or sets <code>l.ch = 0</code> if <code>l.readPosition &gt;= len(l.input)</code> — then updates <code>l.position = l.readPosition</code> and increments <code>l.readPosition</code> by 1.</h2>
+<details>
+<summary>Show answer</summary>
+<div class="answer">
+<pre><code>func (l *Lexer) readChar() {
+	if l.readPosition >= len(l.input) {
+		l.ch = 0
+	} else {
+		l.ch = l.input[l.readPosition]
+	}
+	l.position = l.readPosition
+	l.readPosition += 1
+}</code></pre>
+<p class="why"><strong>Why:</strong> This is the core mechanism that gives the lexer its next character and advances its position in the input string. Setting <code>l.ch = 0</code> at the end of input gives the lexer an explicit, unambiguous "end of file" signal (the NUL byte), rather than leaving <code>l.ch</code> in some undefined state. Updating <code>position</code> to the just-used <code>readPosition</code>, then bumping <code>readPosition</code>, keeps the two pointers correctly in sync on every call.</p>
+</div>
+</details>
+</div>
+
+<div class="qa-item">
+<h2><span class="qnum">Q3.</span>Update <code>func New(input string) *Lexer</code> so that after building <code>l := &amp;Lexer{input: input}</code>, it calls <code>l.readChar()</code> once before <code>return l</code>, so <code>l.ch</code>, <code>l.position</code>, and <code>l.readPosition</code> are all set correctly before the lexer is ever used.</h2>
+<details>
+<summary>Show answer</summary>
+<div class="answer">
+<pre><code>func New(input string) *Lexer {
+	l := &amp;Lexer{input: input}
+	l.readChar()
+	return l
+}</code></pre>
+<p class="why"><strong>Why:</strong> Without this call, a freshly constructed <code>*Lexer</code> would have <code>l.ch</code> at its zero value instead of the actual first character of input. Calling <code>readChar()</code> once inside <code>New()</code> guarantees the lexer is in a fully working state the moment it's created, so the very first call to <code>NextToken()</code> behaves correctly.</p>
+</div>
+</details>
+</div>
+
+<div class="qa-item">
+<h2><span class="qnum">Q4.</span>Write <code>func (l *Lexer) NextToken() token.Token</code>, returning a <code>token.Token{Type token.TokenType, Literal string}</code> built from a <code>switch</code> on <code>l.ch</code> that covers: <code>&#39;=&#39;</code> → <code>ASSIGN</code>, <code>&#39;;&#39;</code> → <code>SEMICOLON</code>, <code>&#39;(&#39;</code> → <code>LPAREN</code>, <code>&#39;)&#39;</code> → <code>RPAREN</code>, <code>&#39;,&#39;</code> → <code>COMMA</code>, <code>&#39;+&#39;</code> → <code>PLUS</code>, <code>&#39;{&#39;</code> → <code>LBRACE</code>, <code>&#39;}&#39;</code> → <code>RBRACE</code>, and <code>0</code> → <code>EOF</code> with <code>Literal = &quot;&quot;</code>. Also write <code>func newToken(tokenType token.TokenType, ch byte) token.Token</code>, which every other case calls to build its token from a single byte.</h2>
+<details>
+<summary>Show answer</summary>
+<div class="answer">
+<pre><code>package lexer
+
+import "monkey/token"
+
+func (l *Lexer) NextToken() token.Token {
+	var tok token.Token
+
+	switch l.ch {
+	case '=':
+		tok = newToken(token.ASSIGN, l.ch)
+	case ';':
+		tok = newToken(token.SEMICOLON, l.ch)
+	case '(':
+		tok = newToken(token.LPAREN, l.ch)
+	case ')':
+		tok = newToken(token.RPAREN, l.ch)
+	case ',':
+		tok = newToken(token.COMMA, l.ch)
+	case '+':
+		tok = newToken(token.PLUS, l.ch)
+	case '{':
+		tok = newToken(token.LBRACE, l.ch)
+	case '}':
+		tok = newToken(token.RBRACE, l.ch)
+	case 0:
+		tok.Literal = ""
+		tok.Type = token.EOF
+	}
+
+	l.readChar()
+	return tok
+}
+
+func newToken(tokenType token.TokenType, ch byte) token.Token {
+	return token.Token{Type: tokenType, Literal: string(ch)}
+}</code></pre>
+<p class="why"><strong>Why:</strong> The <code>switch</code> on <code>l.ch</code> is the simplest possible way to turn "what character am I looking at" into "what token is this" — each single-character symbol maps directly to one token type. <code>newToken()</code> is factored out because every branch needs the same two-step conversion (wrap the type, stringify the byte), so writing it once avoids repeating it in every case. <code>l.readChar()</code> is called <em>after</em> the token is built, not before, so <code>l.ch</code> still reflects the character actually being turned into a token; calling it any earlier would build the token from the wrong character.</p>
+</div>
+</details>
+</div>
+
+<div class="qa-item">
+<h2><span class="qnum">Q5.</span>Add a <code>default</code> case to the <code>switch</code> in <code>NextToken()</code> that calls <code>func isLetter(ch byte) bool</code> (returning <code>true</code> for <code>&#39;a&#39;-&#39;z&#39;</code>, <code>&#39;A&#39;-&#39;Z&#39;</code>, and <code>&#39;_&#39;</code>). If <code>isLetter(l.ch)</code> is true, call a new method <code>func (l *Lexer) readIdentifier() string</code> — which loops <code>l.readChar()</code> while <code>isLetter(l.ch)</code> holds and returns <code>l.input[position:l.position]</code> — assign its result to <code>tok.Literal</code>, and <code>return tok</code> immediately (skipping the trailing <code>l.readChar()</code> at the bottom of <code>NextToken()</code>). Anything else in <code>default</code> should fall back to <code>newToken(token.ILLEGAL, l.ch)</code>.</h2>
+<details>
+<summary>Show answer</summary>
+<div class="answer">
+<pre><code>func (l *Lexer) NextToken() token.Token {
+	var tok token.Token
+
+	switch l.ch {
+	// [... existing single-character cases ...]
+	default:
+		if isLetter(l.ch) {
+			tok.Literal = l.readIdentifier()
+			return tok
+		} else {
+			tok = newToken(token.ILLEGAL, l.ch)
+		}
+	}
+
+	l.readChar()
+	return tok
+}
+
+func (l *Lexer) readIdentifier() string {
+	position := l.position
+	for isLetter(l.ch) {
+		l.readChar()
+	}
+	return l.input[position:l.position]
+}
+
+func isLetter(ch byte) bool {
+	return 'a' &lt;= ch &amp;&amp; ch &lt;= 'z' || 'A' &lt;= ch &amp;&amp; ch &lt;= 'Z' || ch == '_'
+}</code></pre>
+<p class="why"><strong>Why:</strong> Not every character matches one of the fixed single-character cases, so a <code>default</code> branch is needed to catch everything else — starting with identifiers and keywords, which are made up of letters. <code>isLetter</code> also accepts <code>_</code> so identifiers like <code>foo_bar</code> are read as one identifier instead of being split at the underscore. The early <code>return tok</code> matters here: <code>readIdentifier()</code> already calls <code>readChar()</code> in its own loop to consume the whole word, so by the time it returns, <code>l.ch</code> is already sitting on the character <em>after</em> the identifier — the shared <code>l.readChar()</code> at the bottom of the function would skip that character if it ran again. Anything that isn't a letter and isn't already handled falls through to <code>token.ILLEGAL</code>, since the lexer genuinely doesn't know what to do with it yet.</p>
+</div>
+</details>
+</div>
+
+<div class="qa-item">
+<h2><span class="qnum">Q6.</span>In <code>token.go</code>, add a package-level <code>var keywords = map[string]TokenType{&quot;fn&quot;: FUNCTION, &quot;let&quot;: LET}</code> and a function <code>func LookupIdent(ident string) TokenType</code> that returns the matching <code>TokenType</code> from <code>keywords</code> if <code>ident</code> is found there, and returns <code>IDENT</code> otherwise.</h2>
+<details>
+<summary>Show answer</summary>
+<div class="answer">
+<pre><code>// token/token.go
+
+var keywords = map[string]TokenType{
+	"fn":  FUNCTION,
+	"let": LET,
+}
+
+func LookupIdent(ident string) TokenType {
+	if tok, ok := keywords[ident]; ok {
+		return tok
+	}
+	return IDENT
+}</code></pre>
+<p class="why"><strong>Why:</strong> <code>readIdentifier()</code> can only get the raw text of a word — it has no way of knowing whether that word is a language keyword (<code>let</code>, <code>fn</code>) or a name the programmer made up. <code>LookupIdent</code> closes that gap by checking a lookup table. It lives in the <code>token</code> package rather than <code>lexer</code> because it's really a fact about the language's vocabulary, not about the mechanics of scanning characters.</p>
+</div>
+</details>
+</div>
+
+<div class="qa-item">
+<h2><span class="qnum">Q7.</span>Update the <code>default</code> case in <code>NextToken()</code> so that right after <code>tok.Literal = l.readIdentifier()</code>, it also sets <code>tok.Type = token.LookupIdent(tok.Literal)</code> — before the existing <code>return tok</code>.</h2>
+<details>
+<summary>Show answer</summary>
+<div class="answer">
+<pre><code>default:
+	if isLetter(l.ch) {
+		tok.Literal = l.readIdentifier()
+		tok.Type = token.LookupIdent(tok.Literal)
+		return tok
+	} else {
+		tok = newToken(token.ILLEGAL, l.ch)
+	}</code></pre>
+<p class="why"><strong>Why:</strong> This is the piece that actually completes identifier/keyword lexing — until now, every word (including <code>let</code> and <code>fn</code>) would have been typed as a plain identifier. Feeding the literal through <code>LookupIdent</code> lets the lexer correctly emit <code>token.LET</code>/<code>token.FUNCTION</code> for keywords while still falling back to <code>token.IDENT</code> for everything else.</p>
+</div>
+</details>
+</div>
+
+<div class="qa-item">
+<h2><span class="qnum">Q8.</span>Add <code>func (l *Lexer) skipWhitespace()</code> (no return value) that loops calling <code>l.readChar()</code> for as long as <code>l.ch</code> is <code>&#39; &#39;</code>, <code>&#39;\t&#39;</code>, <code>&#39;\n&#39;</code>, or <code>&#39;\r&#39;</code>. Call <code>l.skipWhitespace()</code> as the very first line inside <code>NextToken()</code>, before the <code>switch l.ch</code> statement.</h2>
+<details>
+<summary>Show answer</summary>
+<div class="answer">
+<pre><code>func (l *Lexer) NextToken() token.Token {
+	var tok token.Token
+
+	l.skipWhitespace()
+
+	switch l.ch {
+	// [...]
+	}
+	// [...]
+}
+
+func (l *Lexer) skipWhitespace() {
+	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
+		l.readChar()
+	}
+}</code></pre>
+<p class="why"><strong>Why:</strong> The failing test showed the lexer trying to lex the space character itself, since nothing was yet skipping over it. In Monkey, whitespace only separates tokens and carries no meaning of its own, so the fix is to consume it silently before the <code>switch</code> ever runs — calling <code>skipWhitespace()</code> first means <code>l.ch</code> is guaranteed to be a real, meaningful character (or EOF) by the time token recognition begins.</p>
+</div>
+</details>
+</div>
+
+<div class="qa-item">
+<h2><span class="qnum">Q9.</span>Add <code>func isDigit(ch byte) bool</code> (true for <code>&#39;0&#39;-&#39;9&#39;</code>) and <code>func (l *Lexer) readNumber() string</code> — the same shape as <code>readIdentifier()</code> but looping on <code>isDigit(l.ch)</code> instead of <code>isLetter(l.ch)</code>. Extend the <code>default</code> case in <code>NextToken()</code> with an <code>else if isDigit(l.ch)</code> branch that sets <code>tok.Type = token.INT</code> and <code>tok.Literal = l.readNumber()</code>, then <code>return tok</code>.</h2>
+<details>
+<summary>Show answer</summary>
+<div class="answer">
+<pre><code>func (l *Lexer) NextToken() token.Token {
+	var tok token.Token
+
+	l.skipWhitespace()
+
+	switch l.ch {
+	// [...]
+	default:
+		if isLetter(l.ch) {
+			tok.Literal = l.readIdentifier()
+			tok.Type = token.LookupIdent(tok.Literal)
+			return tok
+		} else if isDigit(l.ch) {
+			tok.Type = token.INT
+			tok.Literal = l.readNumber()
+			return tok
+		} else {
+			tok = newToken(token.ILLEGAL, l.ch)
+		}
+	}
+	// [...]
+}
+
+func (l *Lexer) readNumber() string {
+	position := l.position
+	for isDigit(l.ch) {
+		l.readChar()
+	}
+	return l.input[position:l.position]
+}
+
+func isDigit(ch byte) bool {
+	return '0' &lt;= ch &amp;&amp; ch &lt;= '9'
+}</code></pre>
+<p class="why"><strong>Why:</strong> With whitespace out of the way, the next thing the test input hits is a plain integer like <code>5</code>, which the lexer still can't handle. <code>readNumber()</code> mirrors <code>readIdentifier()</code> almost exactly — same start/end bookkeeping, just swapping <code>isDigit</code> for <code>isLetter</code> — since scanning a run of digits is the same kind of problem as scanning a run of letters. It's kept as its own small function rather than merged with <code>readIdentifier()</code> for simplicity and readability, even though that means a bit of duplication.</p>
+</div>
+</details>
+</div>
+
+</div>
+
+</body>
+</html>
